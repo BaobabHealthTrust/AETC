@@ -1,0 +1,135 @@
+<html>
+	<head>
+		<title>Patient Treatment Dashboard</title>
+		<script type="text/javascript" language="javascript"
+			src="/touchscreentoolkit/lib/javascripts/touchScreenToolkit.js" defer  ></script>
+		<meta http-equiv='content-type' content='text/html;charset=UTF-8' />
+		<%= javascript_include_tag "jquery" %>
+		<%= javascript_include_tag "jquery.flot" %>
+		<%= javascript_include_tag "prototype" %>
+
+		<% if Location.current_location.name.match(/HIV|ART/i) %>
+			<style>
+				#tab2 {
+					background-color: white;
+					border: 0 none;
+					color: black;
+					font-weight: bold;
+				}
+			</style>
+		<% else %>
+			<style>
+				#tab1 {
+					background-color: white;
+					border: 0 none;
+					color: black;
+					font-weight: bold;
+				}
+			</style>
+		<% end %>             
+
+		<script>
+
+			tt_cancel_destination = "/clinic";
+			<%if !@patient_bean.archived_filing_number.blank? %>
+				tt_cancel_show = "javascript:confirmAction(0)";  
+				<% elsif @transferred_out  %>
+				tt_cancel_show = "javascript:confirmAction(1)";  
+				<% elsif @defaulted  %>
+				tt_cancel_show = "javascript:confirmAction(2)";
+			<% else %>  
+				tt_cancel_show = "/encounters/new?patient_id=<%=@person.patient.id %>";
+			<% end %>
+
+			function changeAttributes(){
+				document.getElementById("btnNext").innerHTML = "<span>Continue</span>" 
+			}
+
+			function confirmAction(status){
+				if(status == 0) {
+					confirmOperation("Patient files in archive cabinets.Move to active cabinets?",
+					"/patients/set_new_filing_number/<%=@person.patient.id %>");
+				} else if(status == 1) {
+					confirmOperation("Patient was transferred out. Do you wish to continue?",
+					"/patients/show/<%=@person.patient.id %>");
+				} else if(status == 2) {
+					confirmOperation("Patient is a defaulter. Do you wish to continue?",
+					"/patients/show/<%=@person.patient.id %>");
+				}
+
+				return;
+			}
+
+			function reSize(){
+				__$("buttonlinks").style.display = "none";
+				__$("patient-dashboard-main").style.width = "100%";
+			}
+
+			setTimeout('reSize()',500);
+
+		</script>
+	</head>
+	<body onload = "setTimeout('changeAttributes()',500);">
+		<% 	task = @task
+			task_name = (task.encounter_type || 'NONE').upcase rescue 'NONE' %>
+
+		<form id = 'dashboard' action='/clinic'>
+			<div id='project_name'>
+				OPD
+			</div>
+
+			<span id='patient_name'><%= @patient_bean.name rescue "" %></span>
+			<span id='patient_id'><%= @patient_bean.national_id_with_dashes rescue "" %></span>
+			<span id='patient_residence'><%= @patient_bean.current_residence rescue "" %></span>
+
+			<% if @patient_bean.age > 0 %>
+				<span id='patient_age'><%= @patient_bean.age rescue "" %></span>
+			<% else %>
+				<span id='patient_age'><%= "#{@patient_bean.age_in_months} Months" rescue "" %></span>
+			<% end %>
+
+			<span id='patient_guardian'><%= @patient_bean.guardian rescue "" %></span>
+			<span id='patient_gender'><%= @patient_bean.sex rescue "" %></span>
+
+			<div id="patient_card">
+				<% if Location.current_location.name.match(/HIV|ART/i) %>
+					<%if(@patient_bean.guardian != nil) %>
+						<span value="<%= @patient_bean.guardian rescue '' %>">Guardian</span>
+					<% end %>
+
+					<% if (@reason_for_art_eligibility rescue nil) != nil && (@reason_for_art_eligibility) != "" %>
+						<span value="<%= @reason_for_art_eligibility rescue "" %>">Reason for Starting</span>
+					<% end %>
+
+					<% if (@arv_number rescue nil) != nil && (@arv_number) != " " %>
+						<span value="<%= @arv_number rescue '' %>">ARV Number</span>
+					<% end %>
+
+					<% if (@patient_bean.filing_number rescue nil) != nil && (@patient_bean.filing_number) != " " %>
+						<span value="<%= @patient_bean.filing_number rescue "" %>">Filing Number</span>
+					<% end %>
+
+					<% if (@patient_bean.eid_number rescue nil) != nil && (@patient_bean.eid_number) != " " %>
+						<span value="<%= @patient_bean.eid_number rescue "" %>">EID Number</span>
+					<% end %>
+
+					<% if (@patient_bean.pre_art_number rescue nil) != nil && (@patient_bean.pre_art_number) != " " %>
+						<span value="<%= @patient_bean.pre_art_number rescue "" %>">Pre-ART Number</span>
+					<% end %>
+				<% end %>
+			</div>
+
+			<select id="tabs">
+				<% if Location.current_location.name.match(/HIV|ART/i) %>
+					<option value='/patients/overview?patient_id=<%= @person.patient.id %>'>Overview</option>
+				<% end %>             
+				<option value='/patients/next_task_description?task_id=<%= task.id -%>'>
+					NEXT TASK: <%= task_name.gsub('_',' ') %>
+				</option>
+			</select>
+
+			<input type='submit' value='Finish' />
+		</form>
+	</body>
+</html>
+

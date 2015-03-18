@@ -1,0 +1,102 @@
+<script type="text/javascript">                                                 
+  tt_cancel_destination = "/patients/show/<%= @patient.patient_id%>";           
+  tt_cancel_show = "/patients/show/<%= @patient.patient_id%>";                  
+</script> 
+
+
+<style type="text/css" >
+  .mytableborder {
+    /*border-top:1px dotted ;
+    border-right:1px dotted ;
+    border-bottom:1px dotted ;
+    border-left:1px dotted ;
+    font-size:9pt;
+    background-color: #660000;*/
+  }
+
+  td {
+    border: 1px solid #eee;
+    vertical-align: top;
+    font-size: 0.8em;
+    -moz-user-select:none 
+  }
+
+   .patient-data { -moz-user-select:none }
+</style>
+
+ <div class="patient-data" style="margin: 15px; font-size: 1.1em;">          
+   <b>Name:</b>&nbsp;<%=@patient_bean.name%>&nbsp;(<%=@patient_bean.sex%>)<br />
+   <b>Age:</b>&nbsp;<%=@patient_bean.age%><br />                             
+   <b>National ID:</b>&nbsp;<%=@patient_bean.national_id_with_dashes%><br /> 
+   <b>Address:</b>&nbsp;<%=@patient_bean.address%>                           
+ </div>
+
+<div style="border-style: solid; border-width: 1px 0px 1px 0px; margin: 15px; width: 95%; height: 30em; overflow: auto; ">
+  <table style="width: 100%" cellspacing="0">
+    <tr>
+      <th style="width: 10%; color: #fff; padding: 4px; padding-right: 10px;"><b>Out Patient</b></th>
+      <th class="mytableborder" style="background-color: #ccc; color: #333; width: 15%;"> Date</th>
+      <th class="mytableborder" style="background-color: #ccc; color: #333; width: 23.5%;"> Diagnoses</th>
+      <th class="mytableborder" style="background-color: #ccc; color: #333; width: 23.5%;">Treatment</th>
+      <th class="mytableborder" style="background-color: #ccc; color: #333; width: 28%;">Labs Ordered</th>
+    </tr>
+    <tr>
+      <td colspan="5">
+        <div style="height: 418px; overflow: auto;">
+          <table cellpadding="4" cellspacing="2" border ="0" width="100%">
+            <!--tr>
+              <th style="width: 100px;">&nbsp;</th>
+              <th class="mytableborder" style="background-color: #ccc; color: #333; width: 15%;"> Date</th>
+              <th class="mytableborder" style="background-color: #ccc; color: #333; width: 25%;"> Diagnoses</th>
+              <th class="mytableborder" style="background-color: #ccc; color: #333; width: 25%;">Treatment</th>
+              <th class="mytableborder" style="background-color: #ccc; color: #333; width: 25%;">Labs Ordered</th>
+            </tr-->
+            <tr class ="data" style="background-color: #ccc; color: #333;"> 
+              <th class="mytableborder" style="width: 100px;">
+                <b>Out Patient</b>
+              </th> 
+              <th class="mytableborder" style="background-color: #eee; color: #eee; width: 15%;"> Date</th>
+              <th class="mytableborder" style="background-color: #eee; color: #eee; width: 25%;"> Diagnoses</th>
+              <th class="mytableborder" style="background-color: #eee; color: #eee; width: 25%;">Treatment</th>
+              <th class="mytableborder" style="background-color: #eee; color: #eee; width: 25%;">Labs Ordered</th>
+            </tr>
+
+            <% @past_local_cases.each do |pcase| %>
+				<% if pcase[1]["LAB ORDERS"] || pcase[1]["TREATMENT"] || pcase[1]["OUTPATIENT DIAGNOSIS"] || pcase[1]["ADMISSION DIAGNOSIS"] || pcase[1]["DISCHARGE DIAGNOSIS"] %>
+              <tr>
+                <td>
+                  &nbsp;
+                </td>
+                <td>
+                  <%= pcase[0] rescue "&nbsp;" %>&nbsp;
+
+                </td>
+                <td>
+                  <%= pcase[1]["OUTPATIENT DIAGNOSIS"] || pcase[1]["ADMISSION DIAGNOSIS"] || pcase[1]["DISCHARGE DIAGNOSIS"] rescue "&nbsp;" %>&nbsp;
+                </td>
+                <td>
+                  <%= pcase[1]["TREATMENT"] rescue "&nbsp;" %>&nbsp;
+                </td>
+                <td>
+                  <%= pcase[1]["LAB ORDERS"] rescue "&nbsp;" %>&nbsp;
+                </td>
+              </tr>
+				<% end %>	
+            <% end %>
+
+
+            <tr class ="data" style="background-color: #ccc; color: #333;"> 
+              <th class="mytableborder">
+                <b>In Patient</b>
+              </th> 
+              <td colspan="4" style="background-color: #eee; color: #333;">
+                &nbsp;
+              </td>
+            </tr>
+          </table>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
