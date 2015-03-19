@@ -21,7 +21,8 @@ SELECT
     `e`.`encounter_type`,
     `e`.`encounter_datetime`,
     `e`.`date_created`,
-    `e`.`creator``per`.`birthdate`,
+    `e`.`creator`,
+    `per`.`birthdate`,
      DATE(NOW()) AS `date_now`, 
     (DATEDIFF(DATE(NOW()), `per`.`birthdate`)/365.25) AS `patient_age_now`
 FROM
