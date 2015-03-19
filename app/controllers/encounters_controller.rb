@@ -52,8 +52,9 @@ class EncountersController < GenericEncountersController
     end
 
     if (params[:encounter_type].upcase rescue '') == 'SOCIAL_HISTORY'
-			@religions = ["Roman Catholic", "Presbyterian (C.C.A.P.)",
-			  "Seventh Day Adventist","Baptist","Moslem","Jehovahs Witness"]
+			#DN - 2015-03-17 added Anglican, Seventh Day Baptist, Pentecost, Bhahai, Orthodox church to the list of religions
+			@religions = ["Roman Catholic", "Anglican", "Presbyterian (C.C.A.P.)",
+			  "Seventh Day Adventist", "Seventh Day Baptist", "Baptist", "Moslem", "Jehovahs Witness", "Pentecostal", "Bhahai", "Orthodox", "Rasta", "Hindu", "Athiest", "Buddha", "Zion"]
 =begin
 			recorded_religions = Observation.find(:all, :joins => [:concept, :encounter], 
 			  :conditions => ["obs.concept_id = ? AND NOT value_text IN (?) AND " + 
@@ -64,6 +65,7 @@ class EncountersController < GenericEncountersController
 			@religions = religions  
 			@religions += recorded_religions.uniq.sort unless recorded_religions.blank?
 =end
+      @religions = @religions.sort
 			@religions << "Other"
     end
 
@@ -465,16 +467,26 @@ class EncountersController < GenericEncountersController
 
   def life_threatening_condition  
     search_string = (params[:search_string] || '').upcase
-    
+
     aconcept_set = []
-        
+
+    # 8678 = Life Threatening Conditions concept_id
+    common_answers = Encounter.find_by_sql("
+                                              SELECT name as lt_name
+                                              FROM life_threatening_conditions
+                                              LIMIT 12
+                                            ").map(&:lt_name)
+=begin
     common_answers = Observation.find_most_common(ConceptName.find_by_name("Life threatening condition").concept, search_string)
+
     concept_set("Life threatening condition").each{|concept| aconcept_set << concept.uniq.to_s rescue "test"}  
     set = (common_answers + aconcept_set.sort).uniq             
     set.map!{|cc| cc.upcase.include?(search_string)? cc : nil}        
     
     set = set.sort rescue []
-           
+=end    
+    set = common_answers.sort #rescue []
+               
     render :text => "<li></li>" + "<li>" + set.join("</li><li>") + "</li>"
 
   end

@@ -67,16 +67,22 @@ EOF
     end  
   end
 
-  def self.statistics(encounter_types, opts={})
-
+  def self.statistics(encounter_types, conds)
     encounter_types = EncounterType.all(:conditions => ['name IN (?)', encounter_types])
+
     encounter_types_hash = encounter_types.inject({}) {|result, row| result[row.encounter_type_id] = row.name; result }
-    with_scope(:find => opts) do
-      rows = self.all(
-         :select => 'count(*) as number, encounter_type', 
-         :group => 'encounter.encounter_type',
-         :conditions => ['encounter_type IN (?)', encounter_types.map(&:encounter_type_id)]) 
-      return rows.inject({}) {|result, row| result[encounter_types_hash[row['encounter_type']]] = row['number']; result }
+
+    if conds
+      rows = Encounter.find_by_sql("SELECT count(*) as number, encounter_type 
+                                    FROM main_dashboard_patients mdp
+                                    WHERE #{conds} 
+                                    GROUP BY mdp.encounter_type") 
+    else
+      rows = Encounter.find_by_sql("SELECT count(*) as number, encounter_type 
+                                    FROM main_dashboard_patients mdp
+                                    GROUP BY mdp.encounter_type")
     end     
+
+    return rows.inject({}) {|result, row| result[encounter_types_hash[row['encounter_type']]] = row['number']; result }
   end
 end
