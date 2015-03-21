@@ -23,12 +23,12 @@ SELECT
     `e`.`date_created`,
     `e`.`creator`,
     `per`.`birthdate`,
-     DATE(NOW()) AS `date_now`, 
-    (DATEDIFF(DATE(NOW()), `per`.`birthdate`)/365.25) AS `patient_age_now`
+    `et`.`name`
 FROM
     `encounter` `e`
   INNER JOIN `patient` `pat` ON `pat`.`patient_id` = `e`.`patient_id` AND `pat`.`voided` = 0 
-  INNER JOIN `person` `per` ON `per`.`person_id` = `pat`.`patient_id` AND `per`.`voided` = 0 
+  INNER JOIN `person` `per` ON `per`.`person_id` = `pat`.`patient_id` AND `per`.`voided` = 0
+  LEFT JOIN `encounter_type` `et` ON `et`.`encounter_type_id` = `e`.`encounter_type` 
 WHERE
     `e`.`encounter_type` IN (80, 25, 8, 6)
         AND `e`.`voided` = 0;
@@ -36,13 +36,14 @@ WHERE
 -- Life threatening condition
 CREATE OR REPLACE ALGORITHM=UNDEFINED  SQL SECURITY INVOKER
   VIEW `life_threatening_conditions` AS
-  SELECT `o`.`value_coded_name_id`, `o`.`value_coded`, `c`.`name`
-   FROM `obs` `o`
-     INNER JOIN `concept_name` `c` ON `c`.`concept_name_id` = `o`.`value_coded_name_id`
-   AND `o`.`voided` = 0
-   WHERE `o`.`concept_id` = 8678 
-   GROUP BY `o`.`value_coded_name_id`
-  ORDER BY `o`.`obs_datetime` DESC;
+  SELECT `e`.`encounter_id`, `o`.`value_coded`, `o`.`value_coded_name_id`, `c`.`name`
+  FROM `encounter` `e`
+    INNER JOIN `obs` `o` ON `e`.`encounter_id` = `o`.`encounter_id`
+         AND `e`.`encounter_type` IN (6, 105, 122) AND `e`.`voided` = 0
+    INNER JOIN `concept_name` `c` ON `o`.`value_coded_name_id` = `c`.`concept_name_id`
+  WHERE `o`.`concept_id` = 8678
+  AND `o`.`voided` = 0
+  GROUP BY `o`.`value_coded`;
 
 -- view to capture avg ART/HIV care treatment time for ART patients at a given site
 CREATE OR REPLACE ALGORITHM=UNDEFINED  SQL SECURITY INVOKER
