@@ -66,6 +66,48 @@ EOF
       observations.collect{|observation| "<b>#{(observation.concept.concept_names.last.name) rescue ""}</b>: #{observation.answer_string}"}.join(", ")
     end  
   end
+  
+  def self.statistics_simplified(encounter_types)
+    return_hash = {'me' => {},'today' => {}, 'year' => {}, 'ever' => {}}
+    me_hash = {}
+    today_hash = {}
+    year_hash = {}
+    ever_hash = {}
+    
+    encounter_types.each do |et|
+      me_hash[:"#{et}"] = 0
+      today_hash[:"#{et}"] = 0
+      year_hash[:"#{et}"] = 0
+      ever_hash[:"#{et}"] = 0
+    end
+    
+    encounters = Encounter.find_by_sql("SELECT * FROM main_dashboard_patients")
+       
+    encounters.partition {|e| (e.encounter_datetime.to_datetime >= Date.today.strftime('%Y-%m-%d 00:00:00')) && 
+                                                 (e.encounter_datetime.to_datetime <= Date.today.strftime('%Y-%m-%d 23:59:59')) && 
+                                                 (e.creator == current_user.user_id) }.first.group_by(&:name).each do |et, dt|
+                                                   me_hash[:"'#{et}'"] = dt.count                                                  
+                                                 end
+   
+    encounters.partition {|e| (e.encounter_datetime.to_datetime >= Date.today.strftime('%Y-%m-%d 00:00:00')) && 
+                                                 (e.encounter_datetime.to_datetime <= Date.today.strftime('%Y-%m-%d 23:59:59')) }.first.group_by(&:name).each do |et, dt|
+                                                   today_hash[:"'#{et}'"] = dt.count                                                  
+                                                 end
+    encounters.partition {|e| (e.encounter_datetime.to_datetime >= Date.today.strftime('%Y-01-01 00:00:00')) && 
+                                                 (e.encounter_datetime.to_datetime <= Date.today.strftime('%Y-12-31 23:59:59'))  }.first.group_by(&:name).each do |et, dt|
+                                                   year_hash[:"'#{et}'"] = dt.count                                                  
+                                                 end
+   
+    encounters.group_by(&:name).each do |et, dt|
+                                       ever_hash[:"'#{et}'"] = dt.count                                                  
+                                     end
+    return_hash[:'me'] = me_hash
+    return_hash[:'today'] = today_hash
+    return_hash[:'year'] = year_hash
+    return_hash[:'ever'] = ever_hash
+    
+    return return_hash
+  end
 
   def self.statistics(encounter_types, conds)
     encounter_types = EncounterType.all(:conditions => ['name IN (?)', encounter_types])

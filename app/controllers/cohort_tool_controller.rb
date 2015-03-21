@@ -1788,6 +1788,8 @@ class CohortToolController < ApplicationController
     @formated_start_date = @start_date.strftime('%A, %d, %b, %Y')
     @formated_end_date = @end_date.strftime('%A, %d, %b, %Y')
 
+
+
     people = Person.find(:all,:include =>{:patient=>{:encounters=>{:type=>{}}}},
         :conditions => ["patient.patient_id IS NOT NULL AND encounter_type.name IN (?)
         AND person.date_created >= TIMESTAMP(?)
@@ -2001,6 +2003,10 @@ class CohortToolController < ApplicationController
     @diagnosis_report = Hash.new(0)
     @formated_start_date = @start_date.strftime('%A, %d, %b, %Y')
     @formated_end_date = @end_date.strftime('%A, %d, %b, %Y')
+    @diagnosis_aggregated = {}
+    @age_groups.each do |ag|
+      @diagnosis_aggregated[:"#{ag}"] = Hash.new(0)
+    end
     concept_ids = ConceptName.find(:all,
     :conditions => ["name IN (?)",["Additional diagnosis","Diagnosis",
     "primary diagnosis","secondary diagnosis"]]).map(&:concept_id)
@@ -2010,61 +2016,119 @@ class CohortToolController < ApplicationController
         <= TIMESTAMP(?) AND obs.concept_id IN (?)",
         @start_date.strftime('%Y-%m-%d 00:00:00'),
         @end_date.strftime('%Y-%m-%d 23:59:59'),concept_ids])
-
         observation.each do |obs|
           next if obs.answer_concept.blank?
           diagnosis_name = obs.answer_concept.fullname rescue ''
+
            if (PatientService.age_in_months(obs.person).to_i < 6 )
               @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"< 6 months"][diagnosis_name]+=1
            end
 
           if (@age_groups.include?("6 MONTHS TO < 1 YR"))
             if (PatientService.age_in_months(obs.person).to_i >= 6 && PatientService.age(obs.person).to_i < 1)
               @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"6 MONTHS TO < 1 YR"][diagnosis_name]+=1
             end
           end
 
           if (@age_groups.include?("1 TO < 5"))
             if (PatientService.age(obs.person).to_i >= 1 && PatientService.age(obs.person).to_i < 5)
               @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"1 TO < 5"][diagnosis_name]+=1
             end
           end
 
           if (@age_groups.include?("5 TO 14"))
             if (PatientService.age(obs.person).to_i >= 5 && PatientService.age(obs.person).to_i < 14)
               @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"5 TO 14"][diagnosis_name]+=1
             end
           end
 
           if (@age_groups.include?("> 14 TO < 20"))
             if (PatientService.age(obs.person).to_i >= 14 && PatientService.age(obs.person).to_i < 20)
               @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"> 14 TO < 20"][diagnosis_name]+=1
             end
           end
 
           if (@age_groups.include?("20 TO 30"))
             if (PatientService.age(obs.person).to_i >= 20 && PatientService.age(obs.person).to_i < 30)
               @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"20 TO 30"][diagnosis_name]+=1
             end
           end
 
-          if (@age_groups.include?("30 TO < 40"))
+          if (@age_groups.include?(">30 TO < 40"))
             if (PatientService.age(obs.person).to_i >= 30 && PatientService.age(obs.person).to_i < 40)
               @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:">30 TO < 40"][diagnosis_name]+=1
             end
           end
 
           if (@age_groups.include?("40 TO < 50"))
             if (PatientService.age(obs.person).to_i >= 40 && PatientService.age(obs.person).to_i < 50)
               @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"40 TO < 50"][diagnosis_name]+=1
             end
           end
 
+          if (@age_groups.include?("50 TO <60"))
+            if (PatientService.age(obs.person).to_i >= 50 && PatientService.age(obs.person).to_i < 60)
+              @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"50 TO <60"][diagnosis_name]+=1
+            end
+          end
+
+          if (@age_groups.include?("60 TO <70"))
+            if (PatientService.age(obs.person).to_i >= 60 && PatientService.age(obs.person).to_i < 70)
+              @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"60 TO <70"][diagnosis_name]+=1
+            end
+          end
+
+          if (@age_groups.include?("70 TO <80"))
+            if (PatientService.age(obs.person).to_i >= 70 && PatientService.age(obs.person).to_i < 80)
+              @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"70 TO <80"][diagnosis_name]+=1
+            end
+          end
+
+          if (@age_groups.include?("80 TO <90"))
+            if (PatientService.age(obs.person).to_i >= 80 && PatientService.age(obs.person).to_i < 90)
+              @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"80 TO <90"][diagnosis_name]+=1
+            end
+          end
+
+          if (@age_groups.include?("90 TO  <100"))
+            if (PatientService.age(obs.person).to_i >= 90 && PatientService.age(obs.person).to_i < 100)
+              @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"90 TO  <100"][diagnosis_name]+=1
+            end
+          end
+
+          if (@age_groups.include?("100 TO  <110"))
+            if (PatientService.age(obs.person).to_i >= 100 && PatientService.age(obs.person).to_i < 110)
+              @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"100 TO  <110"][diagnosis_name]+=1
+            end
+          end
+
+          if (@age_groups.include?("110 TO 120"))
+            if (PatientService.age(obs.person).to_i >= 110 && PatientService.age(obs.person).to_i = 120)
+              @diagnosis_report[diagnosis_name]+=1
+              @diagnosis_aggregated[:"110 TO 120"][diagnosis_name]+=1
+            end
+          end          
+
           if (@age_groups.include?("ALL"))
             @diagnosis_report[diagnosis_name]+=1
+            @diagnosis_aggregated[:"ALL"][diagnosis_name]+=1
           end
         end
-
+#       raise @diagnosis_aggregated.to_yaml 
       @diagnosis_report_paginated = []
       @diagnosis_report.each { | diag, value |
         @diagnosis_report_paginated << [diag, value]
