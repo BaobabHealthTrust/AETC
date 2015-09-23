@@ -2020,10 +2020,12 @@ class CohortToolController < ApplicationController
           next if obs.answer_concept.blank?
           diagnosis_name = obs.answer_concept.fullname rescue ''
 
+          if (@age_groups.include?("< 6 MONTHS"))
            if (PatientService.age_in_months(obs.person).to_i < 6 )
               @diagnosis_report[diagnosis_name]+=1
               @diagnosis_aggregated[:"< 6 MONTHS"][diagnosis_name]+=1
            end
+          end
 
           if (@age_groups.include?("6 MONTHS TO < 1 YR"))
             if (PatientService.age_in_months(obs.person).to_i >= 6 && PatientService.age(obs.person).to_i < 1)
